@@ -100,3 +100,5 @@ python tools/native_rules.py restore --backup backups/coolapk-before.json
 - 许可证尚未指定。仓库仅含本项目自行编写的代码和规则增量，未引入其他适配项目的源码或规则库。
 
 更多说明：[工作原理](docs/architecture.md) · [API 102 迁移](docs/api-102-migration.md) · [兼容性](docs/compatibility.md) · [恢复与排查](docs/recovery.md) · [依赖来源](docs/dependencies.md)
+
+开发与设备联调按 [AGENTS.md](AGENTS.md) 中的分工执行：代理开发并交付，用户反馈实际界面效果。
