@@ -5,7 +5,7 @@
 | 依赖 | 用途 | 上游 |
 | --- | --- | --- |
 | Android 4.1.1.4 编译桩 | 仅用于编译本项目使用的基础 Android API | Maven Central `com.google.android:android:4.1.1.4` |
-| Xposed API 82 | 编译时接口，由设备上的注入框架提供运行实现 | https://api.xposed.info/ |
+| libxposed API 102.0.0 | 仅编译时使用 AAR 中的 classes.jar，由兼容框架提供运行实现，不打进 APK | Maven Central `io.github.libxposed:api:102.0.0` / https://github.com/libxposed/api |
 | R8 / D8 8.3.37 | Java 字节码转 DEX | Google Maven `com.android.tools:r8` |
 | Apktool 2.11.1 | 清单编译与 APK 打包 | https://github.com/iBotPeaches/Apktool |
 | uber-apk-signer 1.3.0 | 实验 APK 对齐、调试签名与校验 | https://github.com/patrickfav/uber-apk-signer |

@@ -8,6 +8,7 @@ __pycache__/
 *.apk
 *.dex
 *.jar
+*.aar
 *.keystore
 *.jks
 *.log

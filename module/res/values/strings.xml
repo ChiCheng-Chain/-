@@ -1,0 +1,4 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="module_description">B站、酷安双栏适配：手动点击输入框唤起键盘（libxposed API 102）</string>
+</resources>

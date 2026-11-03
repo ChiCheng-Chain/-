@@ -3,9 +3,9 @@
     "url": "https://repo.maven.apache.org/maven2/com/google/android/android/4.1.1.4/android-4.1.1.4.jar",
     "sha256": "84072541cbb711eff89f7277100ff854929a446dba7ceb1b195c340e0b4fd3cb"
   },
-  "xposed-api.jar": {
-    "url": "https://api.xposed.info/de/robv/android/xposed/api/82/api-82.jar",
-    "sha256": "f48c635f1c7469fdec0e00ad2ea0b7a6b2f5b55065784a35b7ca3a84615e8e25"
+  "libxposed-api-102.aar": {
+    "url": "https://repo.maven.apache.org/maven2/io/github/libxposed/api/102.0.0/api-102.0.0.aar",
+    "sha256": "423484a6e1807e7a423c4b88fcd8176d104318259d91791877fed88fe91479d0"
   },
   "r8.jar": {
     "url": "https://dl.google.com/dl/android/maven2/com/android/tools/r8/8.3.37/r8-8.3.37.jar",

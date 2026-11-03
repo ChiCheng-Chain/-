@@ -6,9 +6,11 @@ import shutil
 import subprocess
 import tempfile
 import urllib.request
+import zipfile
 from pathlib import Path
 
 from rule_config import ROOT, load_rules
+from verify_apk import verify_apk
 
 
 def run(args):
@@ -33,7 +35,7 @@ def dependencies():
         dest = cache / name
         if not dest.exists():
             print('Downloading ' + name, flush=True)
-            request = urllib.request.Request(spec['url'], headers={'User-Agent': 'TabletCompletion-build/0.4.1'})
+            request = urllib.request.Request(spec['url'], headers={'User-Agent': 'TabletCompletion-build/0.6.0'})
             with urllib.request.urlopen(request, timeout=90) as response:
                 payload = response.read()
             if hashlib.sha256(payload).hexdigest() != spec['sha256']:
@@ -78,29 +80,45 @@ def main():
     dex.mkdir()
     generated = build / 'AppRules.java'
     generate_rules(generated)
+    api_jar = build / 'libxposed-api.jar'
+    with zipfile.ZipFile(deps['libxposed-api-102.aar']) as archive:
+        api_jar.write_bytes(archive.read('classes.jar'))
     sources = sorted((ROOT / 'module/src').rglob('*.java'))
-    classpath = os.pathsep.join(str(deps[n]) for n in ('android.jar', 'xposed-api.jar'))
+    classpath = os.pathsep.join(map(str, (deps['android.jar'], api_jar)))
     run([javac, '--release', '8', '-encoding', 'UTF-8', '-cp', classpath, '-d', classes, *sources, generated])
+    test_classes = build / 'test-classes'
+    test_classes.mkdir()
+    test_classpath = os.pathsep.join(map(str, (classes, api_jar)))
+    run([javac, '--release', '8', '-encoding', 'UTF-8', '-cp', test_classpath, '-d', test_classes,
+         ROOT / 'tests/java/HookFlowTest.java'])
+    run([java, '-cp', os.pathsep.join((str(test_classes), test_classpath)), 'HookFlowTest'])
     module_jar = build / 'module.jar'
     run([jar, 'cf', module_jar, '-C', classes, '.'])
     run([java, '-cp', deps['r8.jar'], 'com.android.tools.r8.D8', '--min-api', '27',
-         '--lib', deps['android.jar'], '--classpath', deps['xposed-api.jar'], '--output', dex, module_jar])
+         '--lib', deps['android.jar'], '--classpath', api_jar, '--output', dex, module_jar])
     stage = build / 'apk'
     stage.mkdir()
     for name in ('AndroidManifest.xml', 'apktool.yml'):
         shutil.copyfile(ROOT / 'module' / name, stage / name)
-    shutil.copytree(ROOT / 'module/assets', stage / 'assets')
+    shutil.copytree(ROOT / 'module/res', stage / 'res')
     shutil.copyfile(dex / 'classes.dex', stage / 'classes.dex')
     framework = ROOT / '.cache/apktool-framework'
     framework.mkdir(parents=True, exist_ok=True)
     unsigned = build / 'tablet-completion.apk'
     run([java, '-jar', deps['apktool.jar'], 'b', stage, '-p', framework, '-o', unsigned])
+    # Apktool can discard META-INF during packaging. Insert modern metadata before signing.
+    with zipfile.ZipFile(unsigned, 'a', compression=zipfile.ZIP_DEFLATED) as archive:
+        for source in sorted((ROOT / 'module/META-INF/xposed').iterdir()):
+            archive.writestr('META-INF/xposed/' + source.name, source.read_bytes())
+        archive.writestr('META-INF/xposed/scope.list',
+                         ''.join(app['package'] + '\n' for app in load_rules()))
     signed = build / 'signed'
     run([java, '-jar', deps['signer.jar'], '--apks', unsigned, '--out', signed])
     apk_files = list(signed.glob('*-aligned-debugSigned.apk'))
     if len(apk_files) != 1:
         raise RuntimeError('Expected exactly one signed APK')
     run([java, '-jar', deps['signer.jar'], '--apks', apk_files[0], '--onlyVerify'])
+    verify_apk(apk_files[0], {app['package'] for app in load_rules()})
 
     helper_classes, helper_dex = build / 'helper-classes', build / 'helper-dex'
     helper_classes.mkdir()

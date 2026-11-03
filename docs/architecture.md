@@ -4,7 +4,7 @@
 
 `rules/apps.json` 是应用策略的单一来源。`package`、`homeActivity`、`searchActivity` 定位应用与页面；`defaultRatio`、`draggable` 控制原生平行视窗规则；`manualKeyboard` 和 `searchLaunchFallback` 控制注入功能。
 
-构建时生成 `AppRules.java`，把规则编入同一个 APK。新增适配需要确定目标应用的实际页面和导航行为、增加规则、重新构建并验证；填写包名不能保证适配成功。现阶段没有应用内开关页面。
+构建时生成 `AppRules.java` 和 `META-INF/xposed/scope.list`，把规则编入同一个 APK。`staticScope=true` 将框架可选作用域限制在这些应用内，用户仍可只启用其中一个。新增适配需要确定目标应用的实际页面和导航行为、增加规则、重新构建并验证；填写包名不能保证适配成功。现阶段没有应用内开关页面。
 
 ## OriginOS 原生配置
 
@@ -18,7 +18,11 @@ OriginOS 7 上观察到的重载入口为向 `android` 包发送 `com.vivo.smart
 
 ## 应用内注入
 
-`Entry` 只进入规则表中的应用主进程。搜索 Activity 的键盘状态按生命周期重新锁定：创建、恢复、暂停、配置变化或失去窗口焦点时抑制自动弹键盘，编辑框触摸后放行。通过窗口软键盘策略、输入法调用和编辑框焦点行为配合实现。
+`Entry` 继承现代 `XposedModule`，在 `onModuleLoaded` 记录进程名，在 `onPackageReady` 只为规则表中的应用主进程注册一次 Hook。最低与目标 API 都是 102，使用 `hook(...).setId(...).setExceptionMode(PROTECTIVE).intercept(...)`，没有旧 Xposed 接口或兼容桥。
+
+搜索 Activity 的键盘状态按生命周期重新锁定：创建、恢复、暂停、配置变化或失去窗口焦点时抑制自动弹键盘，编辑框触摸后放行。通过窗口软键盘策略、输入法调用和编辑框焦点行为配合实现。API 102 参数列表不可变，改参时复制为数组交给 `chain.proceed(args)`；拦截调用时直接返回符合原方法签名的结果。`HookFlow` 的桌面测试覆盖放行、短路、参数保留和原始异常传播，但不替代 ART 和 Android 生命周期验证。
+
+状态和 Hook 句柄属于模块入口实例；注册失败时撤销已经注册的 Hook，避免留下不完整的键盘策略。此版不启用热重载，仍需重开应用加载更新。
 
 控件无障碍点击与无障碍焦点动作也会放行，保留辅助输入可用性；因此“仅手动点击”是交互目标，不是对所有系统自动化路径的绝对保证。当前钩子不覆盖评论编辑页等所有输入场景。
 

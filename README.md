@@ -2,7 +2,7 @@
 
 按照使用习惯适配平板应用。首期面向 OriginOS 7，支持哔哩哔哩与酷安：横屏左侧保留首页，右侧打开搜索，点开视频或帖子后在右侧展示内容。
 
-**当前是实验项目 `0.4.1-alpha`，不是通用适配工具或稳定发行版。** 本仓库整理自一台 iQOO 平板上已验证的 v0.4 实验；整理后的 APK 与规则工具尚待真机回归。模块更新期间曾发生设备卡死，原因尚未确定。不会自动安装、提权或重启设备。
+**当前是实验项目 `0.6.0-alpha`，使用现代 libxposed API 102，不再使用 API 82。** 本仓库整理自一台 iQOO 平板上已验证的 v0.4 实验；迁移后的 APK 与规则工具尚待真机回归，不是通用适配工具或稳定发行版。模块更新期间曾发生设备卡死，原因尚未确定。不会自动安装、提权或重启设备。
 
 ## 两种能力
 
@@ -24,7 +24,8 @@ rules/apps.json     每个应用的首页、搜索页、比例和功能选项
 tools/build.py      下载并校验固定版本依赖，编译 APK 与重载辅助程序
 tools/native_rules.py  原生规则查看、备份、应用和恢复
 tools/ReloadRules.java  一次性的 OriginOS 配置重载请求
-tests/              规则保留、转义、读写失败和恢复保护测试
+tools/verify_apk.py  检查 API 102 入口、作用域及 DEX 内的依赖
+tests/              规则恢复测试与 API 102 调用链检查
 docs/               兼容性、工作原理与恢复说明
 ```
 
@@ -43,7 +44,7 @@ python tools/build.py
 - `dist/reload.dex`：仅供原生规则工具调用的一次性重载程序。
 - `dist/SHA256SUMS`：产物校验值。
 
-GitHub Actions 运行相同测试和构建，产物在对应运行的 Artifacts 中下载，不自动创建 Release。正式发布前需确定独立签名密钥；不要为签名不匹配而卸载正在使用的模块。
+构建时还会运行 9 项 API 102 调用链检查，并检查 APK 的新版模块元数据、声明作用域、DEX 入口继承关系，拒绝混入旧 API 引用或框架实现。GitHub Actions 运行相同测试和构建，产物在对应运行的 Artifacts 中下载，不自动创建 Release。正式发布前需确定独立签名密钥；不要为签名不匹配而卸载正在使用的模块。
 
 ## 原生双栏规则
 
@@ -78,12 +79,16 @@ python tools/native_rules.py restore --backup backups/coolapk-before.json
 
 ## 输入法模块
 
-安装 APK 后，在已激活的 LSP / Vector 中启用「平板补全计划·实验版」，作用域仅选择：
+需要**支持 libxposed API 102 的框架**；此前设备安装的 Vector 2.2 声明支持该 API，迁移版在该设备上的实际加载仍待验证。旧版 LSPosed 不能仅凭“能加载 Xposed 模块”就视为兼容。
+
+安装 APK 后，在已激活且兼容的框架中启用「平板补全计划·实验版」，作用域仅选择：
 
 - `tv.danmaku.bili`（哔哩哔哩）
 - `com.coolapk.market`（酷安）
 
-然后结束并重新打开目标应用。此版无需选择 Android 系统、SystemUI、桌面或 `system_server`。模块本身不会获取 root，也不会自动激活 Zygisk / Vector。
+然后结束并重新打开目标应用；从旧版升级也需要重开目标应用，以替换进程中旧代码。模块使用 `META-INF/xposed/` 声明入口，最低与目标 API 均为 102，作用域由规则文件生成并限制在已适配应用内。此版不作用于 Android 系统、SystemUI、桌面或 `system_server`。模块本身不会获取 root，也不会自动激活 Zygisk / Vector。
+
+本次未启用自动热重载（`autoHotReload=false`，保留框架默认拒绝热重载的回调）。支持 API 102 不等于已经实现运行中无缝更新。
 
 目标行为是进入搜索、旋转屏幕或返回页面时不自动弹键盘，点击输入框后才弹出。**已验证范围与尚未覆盖的路径请看[兼容性和验证记录](docs/compatibility.md)**，不要把目标行为视为所有场景均已通过测试。
 
@@ -94,4 +99,4 @@ python tools/native_rules.py restore --backup backups/coolapk-before.json
 - 没有修改第三方 APK，没有解锁付费内容或实现去广告功能。
 - 许可证尚未指定。仓库仅含本项目自行编写的代码和规则增量，未引入其他适配项目的源码或规则库。
 
-更多说明：[工作原理](docs/architecture.md) · [兼容性](docs/compatibility.md) · [恢复与排查](docs/recovery.md) · [依赖来源](docs/dependencies.md)
+更多说明：[工作原理](docs/architecture.md) · [API 102 迁移](docs/api-102-migration.md) · [兼容性](docs/compatibility.md) · [恢复与排查](docs/recovery.md) · [依赖来源](docs/dependencies.md)
