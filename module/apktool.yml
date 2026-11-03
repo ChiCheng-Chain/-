@@ -1,0 +1,14 @@
+version: 2.11.1
+apkFileName: tablet-completion.apk
+isFrameworkApk: false
+usesFramework:
+  ids:
+  - 1
+sdkInfo:
+  minSdkVersion: 27
+  targetSdkVersion: 35
+versionInfo:
+  versionCode: 6
+  versionName: '0.4.1-alpha'
+doNotCompress:
+- arsc

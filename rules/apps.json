@@ -1,0 +1,27 @@
+{
+  "schemaVersion": 1,
+  "apps": [
+    {
+      "id": "bili",
+      "name": "哔哩哔哩",
+      "package": "tv.danmaku.bili",
+      "homeActivity": "tv.danmaku.bili.MainActivityV2",
+      "searchActivity": "com.bilibili.search.main.BiliMainSearchActivity",
+      "defaultRatio": "2|3",
+      "draggable": true,
+      "searchLaunchFallback": false,
+      "manualKeyboard": true
+    },
+    {
+      "id": "coolapk",
+      "name": "酷安",
+      "package": "com.coolapk.market",
+      "homeActivity": "com.coolapk.market.view.main.MainActivity",
+      "searchActivity": "com.coolapk.market.view.search.SuperSearchActivity",
+      "defaultRatio": "2|3",
+      "draggable": true,
+      "searchLaunchFallback": true,
+      "manualKeyboard": true
+    }
+  ]
+}

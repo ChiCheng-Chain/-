@@ -1,0 +1,15 @@
+/.cache/
+/build/
+/dist/
+/backups/
+/local.properties
+__pycache__/
+*.py[cod]
+*.apk
+*.dex
+*.jar
+*.keystore
+*.jks
+*.log
+.idea/
+.vscode/
