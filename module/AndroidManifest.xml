@@ -1,7 +1,17 @@
 <?xml version="1.0" encoding="utf-8"?>
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
-    package="dev.tabletcompletion.keyboard" android:versionCode="8" android:versionName="0.7.0-alpha">
+    package="dev.tabletcompletion.keyboard" android:versionCode="9" android:versionName="0.8.0-alpha">
     <uses-sdk android:minSdkVersion="27" android:targetSdkVersion="35" />
-    <application android:label="平板补全计划·实验版" android:allowBackup="false" android:hasCode="true"
-        android:description="@string/module_description" />
+    <application android:name=".SettingsApp" android:label="平板补全计划" android:allowBackup="false" android:hasCode="true"
+        android:icon="@drawable/ic_launcher" android:theme="@style/AppTheme"
+        android:description="@string/module_description">
+        <activity android:name=".SettingsActivity" android:exported="true">
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN" />
+                <category android:name="android.intent.category.LAUNCHER" />
+            </intent-filter>
+        </activity>
+        <provider android:name="io.github.libxposed.service.XposedProvider"
+            android:authorities="dev.tabletcompletion.keyboard.XposedService" android:exported="true" />
+    </application>
 </manifest>

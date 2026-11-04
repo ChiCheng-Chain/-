@@ -7,6 +7,18 @@
     "url": "https://repo.maven.apache.org/maven2/io/github/libxposed/api/102.0.0/api-102.0.0.aar",
     "sha256": "423484a6e1807e7a423c4b88fcd8176d104318259d91791877fed88fe91479d0"
   },
+  "libxposed-service-102.aar": {
+    "url": "https://repo.maven.apache.org/maven2/io/github/libxposed/service/102.0.0/service-102.0.0.aar",
+    "sha256": "a665e4af4638924047f5d5cb610553e15bc2c0ea2ce64a27afb6dee257ff014c"
+  },
+  "libxposed-interface-102.aar": {
+    "url": "https://repo.maven.apache.org/maven2/io/github/libxposed/interface/102.0.0/interface-102.0.0.aar",
+    "sha256": "4e0b76d6050be1d3dc0d35525180ad7d9b60a47fd8d8fe1d18c2bdc840be9ddb"
+  },
+  "json.jar": {
+    "url": "https://repo.maven.apache.org/maven2/org/json/json/20240303/json-20240303.jar",
+    "sha256": "3cf6cd6892e32e2b4c1c39e0f52f5248a2f5b37646fdfbb79a66b46b618414ed"
+  },
   "r8.jar": {
     "url": "https://dl.google.com/dl/android/maven2/com/android/tools/r8/8.3.37/r8-8.3.37.jar",
     "sha256": "59753e70a74f918389cc87f1b7d66b5c0862932559167425708ded159e3de439"

@@ -4,7 +4,17 @@
 
 `rules/apps.json` 是应用策略的单一来源。`package`、`homeActivity`、`searchActivity` 定位应用与页面。`defaultRatio`、`draggable` 控制原生平行视窗规则。`manualKeyboard`、`searchLaunchFallback`、`blockAds` 分别控制搜索页键盘门控、搜索启动补充和广告拦截。当前四款应用均参与原生双栏配置，旅法师营地同时启用广告拦截。
 
-构建时生成 `AppRules.java` 和 `META-INF/xposed/scope.list`，把规则编入同一个 APK。`staticScope=true` 将框架可选作用域限制在这些应用内，用户仍可只启用其中一个。新增适配需要确定目标应用的实际页面和导航行为、增加规则、重新构建并验证；填写包名不能保证适配成功。现阶段没有应用内开关页面。
+构建时生成 `AppRules.java` 和 `META-INF/xposed/scope.list`，把规则编入同一个 APK。`staticScope=true` 将框架可选作用域限制在这些应用内，用户仍可只启用其中一个。新增适配需要确定目标应用的实际页面和导航行为、增加规则、重新构建并验证；填写包名不能保证适配成功。
+
+## 管理页与持久化
+
+`SettingsActivity` 提供宽屏左右导航、窄屏顶部导航、比例示意及明暗主题。用户显式保存后，`SettingsApp` 使用同步 `SharedPreferences.commit()` 持久化本机选择，后台单线程串行执行框架同步和系统比例应用。任务由 Application 持有，Activity 因旋转重建时可以继续显示执行状态。草稿与已提交值分开显示。
+
+广告选择使用官方 libxposed service / interface 102.0.0 客户端，清单注册官方 `XposedProvider`。管理页以 `settings` 为组名、`包名.ads` 为键，将选择通过框架共享偏好提交；本机保留镜像，断连时显示待同步。`Entry.onPackageReady` 在注册广告钩子前通过 API 的 `getRemotePreferences("settings")` 读取，关闭时跳过广告钩子注册。旧数据没有键时沿用规则默认值，读取异常时放行广告请求并记录错误。当前进程的钩子保持到进程结束，新选择由下一次启动读取。
+
+比例选择通过 `su` 启动 APK 内的 `NativeRatio` 一次性入口。它校验主用户 0、系统平行视窗开关及既有首页/搜索附属关系，保存兼容 CLI 恢复格式的独立备份并 fsync，再只修改 PAD 比例与 `draggable=false`。后者用于避免用户拖动位置覆盖设置页所选默认值。未知字段及其他设备类型比例保留，写入前再次读取以发现外部修改，写入和重载后都按 JSON 结构核对，失败时在当前规则仍与本次修改一致的条件下尝试回滚。界面显式显示待应用、失败或读回成功。
+
+一次性入口使用文件锁排除本应用遗留辅助进程的并发应用，系统更新请求同时携带预期的旧配置作为条件，条件不符时报告失败。系统设置调用最多等待 30 秒，超时后停止当前管理页进程内后续系统写入。UI 的成功状态表示写入及读回完成，实际分栏和重启目标应用后的行为仍由用户验证。
 
 ## OriginOS 原生配置
 

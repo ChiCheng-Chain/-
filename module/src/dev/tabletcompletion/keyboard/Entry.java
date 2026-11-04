@@ -64,7 +64,7 @@ public final class Entry extends XposedModule {
     }
 
     private void installHooks(final AppRule rule, ClassLoader loader) throws NoSuchMethodException {
-        if (rule.blockAds) AdBlocker.install(loader, this, handles);
+        if (rule.blockAds && adsEnabled(rule)) AdBlocker.install(loader, this, handles);
         hookExact(Activity.class, "onCreate", chain -> {
             Activity a = (Activity) chain.getThisObject();
             if (isSearch(a)) {
@@ -128,6 +128,15 @@ public final class Entry extends XposedModule {
                 unlock((View) chain.getThisObject());
             }
         }), int.class, Bundle.class);
+    }
+
+    private boolean adsEnabled(AppRule rule) {
+        try {
+            return getRemotePreferences("settings").getBoolean(rule.packageName + ".ads", true);
+        } catch (RuntimeException error) {
+            log(Log.ERROR, TAG, "Ad blocking disabled because the saved preference could not be read", error);
+            return false;
+        }
     }
 
     private void hookExact(Class<?> type, String name, Hooker interceptor, Class<?>... parameters)

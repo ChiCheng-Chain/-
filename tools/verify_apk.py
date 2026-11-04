@@ -49,14 +49,29 @@ def verify_apk(path, expected_scope):
             require(marker.encode() not in manifest and marker.encode('utf-16le') not in manifest,
                     'Legacy module metadata remains: ' + marker)
         defined = {}
+        service_references = set()
         for name in names:
             if name.startswith('classes') and name.endswith('.dex'):
                 types, classes = dex_types_and_classes(archive.read(name))
+                service_references.update(t.lstrip('[') for t in types
+                                          if t.lstrip('[').startswith('Lio/github/libxposed/service/'))
                 require(not any('de/robv/android/xposed/' in t for t in types), 'Legacy API references remain in DEX')
-                require(not any(t.startswith('Lio/github/libxposed/') for t in classes), 'Framework API bundled into module')
+                require(not any(t.startswith('Lio/github/libxposed/')
+                                and not t.startswith('Lio/github/libxposed/service/') for t in classes),
+                        'Framework API bundled into module')
+                require(not any(t.startswith('Lorg/json/') for t in classes), 'Compile-only JSON library was bundled')
                 defined.update(classes)
         require(defined.get('Ldev/tabletcompletion/keyboard/Entry;') == 'Lio/github/libxposed/api/XposedModule;',
                 'Entrypoint does not extend the modern XposedModule')
+        require(defined.get('Ldev/tabletcompletion/keyboard/SettingsActivity;') == 'Landroid/app/Activity;',
+                'Settings launcher is missing')
+        require('Lio/github/libxposed/service/XposedProvider;' in defined, 'Settings service provider is missing')
+        require(service_references <= defined.keys(), 'Service runtime dependencies are missing from APK')
+        require('assets/licenses/libxposed-service.txt' in names, 'Service license is missing')
+        for marker in ('android.intent.action.MAIN', 'android.intent.category.LAUNCHER',
+                       'dev.tabletcompletion.keyboard.XposedService'):
+            require(marker.encode() in manifest or marker.encode('utf-16le') in manifest,
+                    'Settings manifest entry is missing: ' + marker)
     print('APK verification passed: API 102 metadata, scope, entrypoint, no legacy API or bundled framework')
 
 

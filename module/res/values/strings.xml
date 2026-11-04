@@ -1,4 +1,4 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <string name="module_description">B站、酷安双栏适配与键盘门控；旅法师营地广告拦截（libxposed API 102）</string>
+    <string name="module_description">四款应用双栏适配与键盘门控，可配置左右比例和旅法师营地去广告（libxposed API 102）</string>
 </resources>

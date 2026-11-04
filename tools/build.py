@@ -35,7 +35,7 @@ def dependencies():
         dest = cache / name
         if not dest.exists():
             print('Downloading ' + name, flush=True)
-            request = urllib.request.Request(spec['url'], headers={'User-Agent': 'TabletCompletion-build/0.7.0'})
+            request = urllib.request.Request(spec['url'], headers={'User-Agent': 'TabletCompletion-build/0.8.0'})
             with urllib.request.urlopen(request, timeout=90) as response:
                 payload = response.read()
             if hashlib.sha256(payload).hexdigest() != spec['sha256']:
@@ -50,7 +50,8 @@ def dependencies():
 def generate_rules(destination):
     entries = []
     for app in load_rules():
-        args = [json.dumps(app[k]) for k in ('package', 'homeActivity', 'searchActivity')]
+        args = [json.dumps(app[k], ensure_ascii=False) for k in
+                ('name', 'defaultRatio', 'package', 'homeActivity', 'searchActivity')]
         args += [str(app[k]).lower() for k in ('searchLaunchFallback', 'manualKeyboard', 'blockAds')]
         entries.append('        new AppRule(' + ', '.join(args) + ')')
     source = '''package dev.tabletcompletion.keyboard;
@@ -63,6 +64,7 @@ public final class AppRules {
         for (AppRule rule : RULES) if (rule.packageName.equals(packageName)) return rule;
         return null;
     }
+    public static AppRule[] all() { return RULES.clone(); }
 }
 ''' % ',\n'.join(entries)
     destination.write_text(source, encoding='utf-8', newline='\n')
@@ -83,25 +85,38 @@ def main():
     api_jar = build / 'libxposed-api.jar'
     with zipfile.ZipFile(deps['libxposed-api-102.aar']) as archive:
         api_jar.write_bytes(archive.read('classes.jar'))
+    service_jar = build / 'libxposed-service.jar'
+    with zipfile.ZipFile(deps['libxposed-service-102.aar']) as archive:
+        service_jar.write_bytes(archive.read('classes.jar'))
+    interface_jar = build / 'libxposed-interface.jar'
+    with zipfile.ZipFile(deps['libxposed-interface-102.aar']) as archive:
+        interface_jar.write_bytes(archive.read('classes.jar'))
     sources = sorted((ROOT / 'module/src').rglob('*.java'))
-    classpath = os.pathsep.join(map(str, (deps['android.jar'], api_jar)))
+    classpath = os.pathsep.join(map(str, (deps['android.jar'], deps['json.jar'], api_jar, service_jar)))
     run([javac, '--release', '8', '-encoding', 'UTF-8', '-cp', classpath, '-d', classes, *sources, generated])
     test_classes = build / 'test-classes'
     test_classes.mkdir()
-    test_classpath = os.pathsep.join(map(str, (classes, api_jar)))
+    test_classpath = os.pathsep.join(map(str, (classes, api_jar, deps['android.jar'], deps['json.jar'])))
     run([javac, '--release', '8', '-encoding', 'UTF-8', '-cp', test_classpath, '-d', test_classes,
-         ROOT / 'tests/java/HookFlowTest.java', ROOT / 'tests/java/AdBlockerTest.java'])
+         ROOT / 'tests/java/HookFlowTest.java', ROOT / 'tests/java/AdBlockerTest.java',
+         ROOT / 'tests/java/NativeRatioTest.java', ROOT / 'tests/java/AdSettingsTest.java'])
     run([java, '-cp', os.pathsep.join((str(test_classes), test_classpath)), 'HookFlowTest'])
     run([java, '-cp', os.pathsep.join((str(test_classes), test_classpath)), 'AdBlockerTest'])
+    run([java, '-cp', os.pathsep.join((str(test_classes), test_classpath)),
+         'dev.tabletcompletion.keyboard.NativeRatioTest'])
+    run([java, '-cp', os.pathsep.join((str(test_classes), test_classpath)),
+         'dev.tabletcompletion.keyboard.AdSettingsTest'])
     module_jar = build / 'module.jar'
     run([jar, 'cf', module_jar, '-C', classes, '.'])
     run([java, '-cp', deps['r8.jar'], 'com.android.tools.r8.D8', '--min-api', '27',
-         '--lib', deps['android.jar'], '--classpath', api_jar, '--output', dex, module_jar])
+         '--lib', deps['android.jar'], '--classpath', deps['json.jar'], '--classpath', api_jar,
+         '--output', dex, module_jar, service_jar, interface_jar])
     stage = build / 'apk'
     stage.mkdir()
     for name in ('AndroidManifest.xml', 'apktool.yml'):
         shutil.copyfile(ROOT / 'module' / name, stage / name)
     shutil.copytree(ROOT / 'module/res', stage / 'res')
+    shutil.copytree(ROOT / 'module/assets', stage / 'assets')
     shutil.copyfile(dex / 'classes.dex', stage / 'classes.dex')
     framework = ROOT / '.cache/apktool-framework'
     framework.mkdir(parents=True, exist_ok=True)
