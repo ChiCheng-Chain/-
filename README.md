@@ -1,16 +1,17 @@
 # 平板补全计划
 
-按照使用习惯适配平板应用。首期面向 OriginOS 7，支持哔哩哔哩与酷安：横屏左侧保留首页，右侧打开搜索，点开视频或帖子后在右侧展示内容。另为旅法师营地拦截应用内广告（开屏、插屏、信息流、横幅），不改双栏。
+按照使用习惯适配平板应用。首期面向 OriginOS 7，为哔哩哔哩、酷安、网易大神和旅法师营地配置横屏左首页、右搜索的双栏规则，并抑制搜索页自动弹出输入法。旅法师营地另提供应用内广告拦截（开屏、插屏、信息流、横幅）。
 
-**当前是实验项目 `0.7.0-alpha`，使用现代 libxposed API 102，不再使用 API 82。** 本仓库整理自一台 iQOO 平板上已验证的 v0.4 实验；迁移后的 APK 与规则工具尚待真机回归，不是通用适配工具或稳定发行版。模块更新期间曾发生设备卡死，原因尚未确定。不会自动安装、提权或重启设备。
+**当前是实验项目 `0.7.0-alpha`，使用现代 libxposed API 102。** 本仓库整理自一台 iQOO 平板上已验证的 v0.4 实验。用户于 2026-11-04 确认网易大神双栏及抑制自动弹输入法、旅法师营地双栏及去广告已通过真机测试，详细验证范围见兼容性记录。模块更新期间曾发生设备卡死，原因尚未确定。
 
-## 两种能力
+## 功能
 
 | 能力 | 实现方式 | 完整重启、临时 root 失效之后 |
 | --- | --- | --- |
 | 左首页、右搜索的双栏规则 | 修改 OriginOS 原生平行视窗配置 | 已写入的配置可继续生效；系统更新或云端规则刷新可能覆盖 |
 | 搜索页抑制自动弹输入法 | LSP / Vector 注入目标应用 | 需要重新激活注入框架 |
 | 酷安启动搜索的补充逻辑 | 模块在原生平行视窗模式中启动搜索页 | 需要注入框架；未加载时可能不自动打开右侧搜索 |
+| 旅法师营地广告拦截 | LSP / Vector 注入目标应用 | 需要重新激活注入框架 |
 
 B 站首页在此前验证的分栏宽度下每行显示两个视频；模块没有强制改写视频卡片列数。系统分隔条可以拖动，实际比例由系统和用户操作决定。
 
@@ -44,7 +45,7 @@ python tools/build.py
 - `dist/reload.dex`：仅供原生规则工具调用的一次性重载程序。
 - `dist/SHA256SUMS`：产物校验值。
 
-构建时还会运行 9 项 API 102 调用链检查，并检查 APK 的新版模块元数据、声明作用域、DEX 入口继承关系，拒绝混入旧 API 引用或框架实现。GitHub Actions 运行相同测试和构建，产物在对应运行的 Artifacts 中下载，不自动创建 Release。正式发布前需确定独立签名密钥；不要为签名不匹配而卸载正在使用的模块。
+构建时还会运行 9 项 API 102 调用链检查和 3 项广告回调契约检查，并检查 APK 的新版模块元数据、声明作用域、DEX 入口继承关系，拒绝混入旧 API 引用或框架实现。GitHub Actions 运行相同测试和构建，产物在对应运行的 Artifacts 中下载，不自动创建 Release。正式发布前需确定独立签名密钥；不要为签名不匹配而卸载正在使用的模块。
 
 ## 原生双栏规则
 
@@ -60,7 +61,7 @@ python tools/native_rules.py apply --app bili --backup backups/bili-before.json
 python tools/native_rules.py apply --app coolapk --backup backups/coolapk-before.json
 ```
 
-可用 `--app all` 一次选择两款应用。ADB 不在 PATH 时，在子命令前指定 `--adb /path/to/adb`；多设备时加 `--serial DEVICE_SERIAL`。例如：
+`--app` 可选 `bili`、`coolapk`、`neteasegl`、`iplaymtg`，`--app all` 会选择全部四款应用。批量应用前需要为所有选中应用开启平行视窗。ADB 不在 PATH 时，在子命令前指定 `--adb /path/to/adb`；多设备时加 `--serial DEVICE_SERIAL`。例如：
 
 ```sh
 python tools/native_rules.py --adb /path/to/adb inspect --app all
@@ -79,13 +80,14 @@ python tools/native_rules.py restore --backup backups/coolapk-before.json
 
 ## 输入法模块
 
-需要**支持 libxposed API 102 的框架**；此前设备安装的 Vector 2.2 声明支持该 API，迁移版在该设备上的实际加载仍待验证。旧版 LSPosed 不能仅凭“能加载 Xposed 模块”就视为兼容。
+需要**支持 libxposed API 102 的框架**。此前设备安装的 Vector 2.2 声明支持该 API，当前版本的真机测试记录见[兼容性和验证记录](docs/compatibility.md)。
 
 安装 APK 后，在已激活且兼容的框架中启用「平板补全计划·实验版」，作用域仅选择：
 
 - `tv.danmaku.bili`（哔哩哔哩）
 - `com.coolapk.market`（酷安）
 - `com.gonlan.iplaymtg`（旅法师营地，广告拦截）
+- `com.netease.gl`（网易大神，搜索页键盘门控）
 
 然后结束并重新打开目标应用；从旧版升级也需要重开目标应用，以替换进程中旧代码。模块使用 `META-INF/xposed/` 声明入口，最低与目标 API 均为 102，作用域由规则文件生成并限制在已适配应用内。此版不作用于 Android 系统、SystemUI、桌面或 `system_server`。模块本身不会获取 root，也不会自动激活 Zygisk / Vector。
 

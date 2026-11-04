@@ -2,7 +2,7 @@
 
 ## 应用规则
 
-`rules/apps.json` 是应用策略的单一来源。`package`、`homeActivity`、`searchActivity` 定位应用与页面；`defaultRatio`、`draggable` 控制原生平行视窗规则；`manualKeyboard` 和 `searchLaunchFallback` 控制注入功能。
+`rules/apps.json` 是应用策略的单一来源。`package`、`homeActivity`、`searchActivity` 定位应用与页面。`defaultRatio`、`draggable` 控制原生平行视窗规则。`manualKeyboard`、`searchLaunchFallback`、`blockAds` 分别控制搜索页键盘门控、搜索启动补充和广告拦截。当前四款应用均参与原生双栏配置，旅法师营地同时启用广告拦截。
 
 构建时生成 `AppRules.java` 和 `META-INF/xposed/scope.list`，把规则编入同一个 APK。`staticScope=true` 将框架可选作用域限制在这些应用内，用户仍可只启用其中一个。新增适配需要确定目标应用的实际页面和导航行为、增加规则、重新构建并验证；填写包名不能保证适配成功。现阶段没有应用内开关页面。
 
