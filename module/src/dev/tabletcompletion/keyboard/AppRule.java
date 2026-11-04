@@ -7,13 +7,15 @@ public final class AppRule {
     public final String searchActivity;
     public final boolean searchLaunchFallback;
     public final boolean manualKeyboard;
+    public final boolean blockAds;
 
     public AppRule(String packageName, String homeActivity, String searchActivity,
-                   boolean searchLaunchFallback, boolean manualKeyboard) {
+                   boolean searchLaunchFallback, boolean manualKeyboard, boolean blockAds) {
         this.packageName = packageName;
         this.homeActivity = homeActivity;
         this.searchActivity = searchActivity;
         this.searchLaunchFallback = searchLaunchFallback;
         this.manualKeyboard = manualKeyboard;
+        this.blockAds = blockAds;
     }
 }

@@ -1,6 +1,7 @@
 package dev.tabletcompletion.keyboard;
 
 import java.lang.reflect.Method;
+import java.util.List;
 import io.github.libxposed.api.XposedInterface.Chain;
 import io.github.libxposed.api.XposedInterface.Hooker;
 
@@ -42,5 +43,24 @@ public final class HookFlow {
             }
             return chain.proceed();
         };
+    }
+
+    /** Runs failed() on an ad request's callback so the app takes its existing no-ad path. */
+    public static void notifyCallbackFailed(List<Object> args, Class<?> listener) {
+        if (listener == null) return;
+        for (Object arg : args) {
+            if (arg != null && listener.isInstance(arg)) {
+                try {
+                    Method failed = listener.getMethod("failed");
+                    // Callback implementations are app-private classes; without this the
+                    // cross-loader invoke would throw IllegalAccessException every time.
+                    failed.setAccessible(true);
+                    failed.invoke(arg);
+                } catch (ReflectiveOperationException ignored) {
+                    // A callback that cannot run still ends the request; nothing to recover.
+                }
+                return;
+            }
+        }
     }
 }

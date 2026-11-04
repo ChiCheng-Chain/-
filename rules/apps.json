@@ -10,7 +10,8 @@
       "defaultRatio": "2|3",
       "draggable": true,
       "searchLaunchFallback": false,
-      "manualKeyboard": true
+      "manualKeyboard": true,
+      "blockAds": false
     },
     {
       "id": "coolapk",
@@ -21,7 +22,32 @@
       "defaultRatio": "2|3",
       "draggable": true,
       "searchLaunchFallback": true,
-      "manualKeyboard": true
+      "manualKeyboard": true,
+      "blockAds": false
+    },
+    {
+      "id": "iplaymtg",
+      "name": "旅法师营地",
+      "package": "com.gonlan.iplaymtg",
+      "homeActivity": "com.gonlan.iplaymtg.common.MainActivity",
+      "searchActivity": "com.gonlan.iplaymtg.news.activity.SourceSearchActivity",
+      "defaultRatio": "2|3",
+      "draggable": true,
+      "searchLaunchFallback": false,
+      "manualKeyboard": true,
+      "blockAds": true
+    },
+    {
+      "id": "neteasegl",
+      "name": "网易大神",
+      "package": "com.netease.gl",
+      "homeActivity": "com.netease.gl.ui.activity.welcome.WelcomeActivity",
+      "searchActivity": "com.netease.gl.compfeed.search.activity.SearchFeedAndUserActivity",
+      "defaultRatio": "2|3",
+      "draggable": true,
+      "searchLaunchFallback": false,
+      "manualKeyboard": true,
+      "blockAds": false
     }
   ]
 }

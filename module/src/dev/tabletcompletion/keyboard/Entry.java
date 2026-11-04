@@ -49,7 +49,7 @@ public final class Entry extends XposedModule {
         if (installed || rule == null || !param.isFirstPackage()
                 || !rule.packageName.equals(processName)) return;
         try {
-            installHooks(rule);
+            installHooks(rule, param.getClassLoader());
             installed = true;
             log(Log.INFO, TAG, "API 102 keyboard hooks loaded: " + rule.packageName);
         } catch (Throwable error) {
@@ -63,7 +63,8 @@ public final class Entry extends XposedModule {
         }
     }
 
-    private void installHooks(final AppRule rule) throws NoSuchMethodException {
+    private void installHooks(final AppRule rule, ClassLoader loader) throws NoSuchMethodException {
+        if (rule.blockAds) AdBlocker.install(loader, this, handles);
         hookExact(Activity.class, "onCreate", chain -> {
             Activity a = (Activity) chain.getThisObject();
             if (isSearch(a)) {
@@ -143,6 +144,15 @@ public final class Entry extends XposedModule {
     private void register(Method method, Hooker interceptor) {
         handles.add(hook(method).setId("tablet-completion.keyboard")
                 .setExceptionMode(ExceptionMode.PROTECTIVE).intercept(interceptor));
+    }
+
+    /** Registers one hook under the ad-block id; shared with AdBlocker's install path. */
+    io.github.libxposed.api.XposedInterface.HookHandle registerHook(Method method, Hooker interceptor) {
+        io.github.libxposed.api.XposedInterface.HookHandle handle =
+                hook(method).setId("tablet-completion.adblock")
+                        .setExceptionMode(ExceptionMode.PROTECTIVE).intercept(interceptor);
+        handles.add(handle);
+        return handle;
     }
 
     private static boolean nativeSplit(Activity a) {

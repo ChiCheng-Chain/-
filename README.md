@@ -1,8 +1,8 @@
 # 平板补全计划
 
-按照使用习惯适配平板应用。首期面向 OriginOS 7，支持哔哩哔哩与酷安：横屏左侧保留首页，右侧打开搜索，点开视频或帖子后在右侧展示内容。
+按照使用习惯适配平板应用。首期面向 OriginOS 7，支持哔哩哔哩与酷安：横屏左侧保留首页，右侧打开搜索，点开视频或帖子后在右侧展示内容。另为旅法师营地拦截应用内广告（开屏、插屏、信息流、横幅），不改双栏。
 
-**当前是实验项目 `0.6.0-alpha`，使用现代 libxposed API 102，不再使用 API 82。** 本仓库整理自一台 iQOO 平板上已验证的 v0.4 实验；迁移后的 APK 与规则工具尚待真机回归，不是通用适配工具或稳定发行版。模块更新期间曾发生设备卡死，原因尚未确定。不会自动安装、提权或重启设备。
+**当前是实验项目 `0.7.0-alpha`，使用现代 libxposed API 102，不再使用 API 82。** 本仓库整理自一台 iQOO 平板上已验证的 v0.4 实验；迁移后的 APK 与规则工具尚待真机回归，不是通用适配工具或稳定发行版。模块更新期间曾发生设备卡死，原因尚未确定。不会自动安装、提权或重启设备。
 
 ## 两种能力
 
@@ -85,6 +85,7 @@ python tools/native_rules.py restore --backup backups/coolapk-before.json
 
 - `tv.danmaku.bili`（哔哩哔哩）
 - `com.coolapk.market`（酷安）
+- `com.gonlan.iplaymtg`（旅法师营地，广告拦截）
 
 然后结束并重新打开目标应用；从旧版升级也需要重开目标应用，以替换进程中旧代码。模块使用 `META-INF/xposed/` 声明入口，最低与目标 API 均为 102，作用域由规则文件生成并限制在已适配应用内。此版不作用于 Android 系统、SystemUI、桌面或 `system_server`。模块本身不会获取 root，也不会自动激活 Zygisk / Vector。
 
@@ -96,7 +97,7 @@ python tools/native_rules.py restore --backup backups/coolapk-before.json
 
 - 未包含全宽首页实验、系统状态栏偏移或自动软重启功能。
 - 临时 root、Zygisk 和 Vector 的安装及激活由外部工具负责。
-- 没有修改第三方 APK，没有解锁付费内容或实现去广告功能。
+- 没有修改第三方 APK，没有解锁付费内容。旅法师营地的广告拦截只阻断本仓库模块进程内注入的广告请求，不承诺覆盖未来版本变化。
 - 许可证尚未指定。仓库仅含本项目自行编写的代码和规则增量，未引入其他适配项目的源码或规则库。
 
 更多说明：[工作原理](docs/architecture.md) · [API 102 迁移](docs/api-102-migration.md) · [兼容性](docs/compatibility.md) · [恢复与排查](docs/recovery.md) · [依赖来源](docs/dependencies.md)

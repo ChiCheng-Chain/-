@@ -21,7 +21,7 @@ def load_rules(path=ROOT / 'rules/apps.json'):
             raise ValueError('Duplicate package')
         if not re.fullmatch(r'[1-9][0-9]*\|[1-9][0-9]*', app['defaultRatio']):
             raise ValueError('Invalid split ratio')
-        for field in ('draggable', 'manualKeyboard', 'searchLaunchFallback'):
+        for field in ('draggable', 'manualKeyboard', 'searchLaunchFallback', 'blockAds'):
             if type(app[field]) is not bool:
                 raise ValueError(field + ' must be boolean')
         seen_ids.add(app['id'])

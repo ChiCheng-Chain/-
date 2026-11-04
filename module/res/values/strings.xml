@@ -1,4 +1,4 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <string name="module_description">B站、酷安双栏适配：手动点击输入框唤起键盘（libxposed API 102）</string>
+    <string name="module_description">B站、酷安双栏适配与键盘门控；旅法师营地广告拦截（libxposed API 102）</string>
 </resources>
